@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Counselor Kita's Daily Docket</title>
+  <style>
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!--
+    ====================================================================
+    FILL IN THESE TWO VALUES before this site will work.
+    See the deployment guide for exactly where each one comes from.
+    ====================================================================
+  -->
+  <script>
+    window.FIREBASE_CONFIG = {
+      apiKey: "PASTE_FROM_FIREBASE_CONSOLE",
+      authDomain: "PASTE_FROM_FIREBASE_CONSOLE",
+      projectId: "PASTE_FROM_FIREBASE_CONSOLE",
+      storageBucket: "PASTE_FROM_FIREBASE_CONSOLE",
+      messagingSenderId: "PASTE_FROM_FIREBASE_CONSOLE",
+      appId: "PASTE_FROM_FIREBASE_CONSOLE"
+    };
+
+    window.WORKER_URL = "PASTE_YOUR_CLOUDFLARE_WORKER_URL_HERE";
+  </script>
+
+  <script src="bundle.js"></script>
+</body>
+</html>
