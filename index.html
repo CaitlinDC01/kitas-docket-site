@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Counselor Kita's Daily Docket</title>
 
+  <!-- Fonts for the softer, rounded aesthetic: Fredoka for headlines, Inter for body text -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <!--
     Tailwind CDN — the app's className utilities (flex, grid, spacing, etc.)
     depend on this. Without it, layout silently collapses since there's no
@@ -19,7 +24,8 @@
       /* Prevents any stray wide element from creating page-level horizontal scroll */
       overflow-x: hidden;
       max-width: 100%;
-      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: #FBF5EE;
     }
     * {
       box-sizing: border-box;
@@ -28,33 +34,36 @@
       overflow-x: hidden;
       max-width: 100%;
     }
-    /* iOS Safari auto-zooms on focus if an input's font-size is under 16px.
-       This overrides Tailwind's smaller text sizes on form controls only. */
+    /* Keeps form fields comfortably readable and prevents unwanted
+       browser zoom-on-focus behavior, on both iOS and Android. */
     input, select, textarea {
       font-size: 16px !important;
     }
-    /* Respect the iPhone home-indicator / notch safe areas */
+    /* Respects safe areas on phones with notches, cutouts, or gesture
+       nav bars — works on modern iOS and Android; does nothing on
+       phones without one (like a folded/unfolded Galaxy screen). */
     body {
       padding-left: env(safe-area-inset-left, 0px);
       padding-right: env(safe-area-inset-right, 0px);
     }
   </style>
+  <meta name="theme-color" content="#332F4D" />
 </head>
 <body>
   <div id="root"></div>
 
   <script>
-window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDB8_FkiyOmAptAiO3J9ttQ5ui310wtA0c",
+    window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC...",
   authDomain: "kitas-docket.firebaseapp.com",
   projectId: "kitas-docket",
-  storageBucket: "kitas-docket.firebasestorage.app",
-  messagingSenderId: "236037928934",
-  appId: "1:236037928934:web:742efdf2dd686a3f588827"
-};
+  storageBucket: "kitas-docket.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abc123"
+    };
 
-window.WORKER_URL = "https://script.google.com/macros/s/AKfycbzi3V0uccSZ3HcjyJhik0aJxrjv8NI4Z77kBew9BuGLEGgmjUZHSaq31V6bKviwwvu8/exec";
-</script>
+    window.WORKER_URL = "https://kitas-docket-proxy-2.kitasdocket.workers.dev";
+  </script>
 
   <script src="bundle.js"></script>
 </body>
