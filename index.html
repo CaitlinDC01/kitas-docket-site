@@ -1,70 +1,223 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Counselor Kita's Daily Docket</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#6f1533" />
+    <meta name="description" content="Kita's clear, course-first law school planner." />
+    <meta property="og:title" content="Kita's Docket" />
+    <meta property="og:description" content="A calm, course-first command center for 1L." />
+    <meta property="og:image" content="https://caitlindc01.github.io/kitas-docket-site/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://caitlindc01.github.io/kitas-docket-site/og.png" />
+    <title>Kita's Docket</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
 
-  <!-- Fonts for the softer, rounded aesthetic: Fredoka for headlines, Inter for body text -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary navigation">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">KD</div>
+          <div>
+            <p class="eyebrow">Counselor Kita</p>
+            <h1>Kita's Docket</h1>
+          </div>
+        </div>
 
-  <!--
-    Tailwind CDN — the app's className utilities (flex, grid, spacing, etc.)
-    depend on this. Without it, layout silently collapses since there's no
-    build step generating a real Tailwind stylesheet for this static site.
-  -->
-  <script src="https://cdn.tailwindcss.com"></script>
+        <nav class="nav-list">
+          <button class="nav-item is-active" data-view="today"><span>01</span>Today</button>
+          <button class="nav-item" data-view="courses"><span>02</span>Courses</button>
+          <button class="nav-item" data-view="calendar"><span>03</span>Calendar</button>
+          <button class="nav-item" data-view="materials"><span>04</span>Materials</button>
+        </nav>
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      /* Prevents any stray wide element from creating page-level horizontal scroll */
-      overflow-x: hidden;
-      max-width: 100%;
-      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-      background: #FBF5EE;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    #root {
-      overflow-x: hidden;
-      max-width: 100%;
-    }
-    /* Keeps form fields comfortably readable and prevents unwanted
-       browser zoom-on-focus behavior, on both iOS and Android. */
-    input, select, textarea {
-      font-size: 16px !important;
-    }
-    /* Respects safe areas on phones with notches, cutouts, or gesture
-       nav bars — works on modern iOS and Android; does nothing on
-       phones without one (like a folded/unfolded Galaxy screen). */
-    body {
-      padding-left: env(safe-area-inset-left, 0px);
-      padding-right: env(safe-area-inset-right, 0px);
-    }
-  </style>
-  <meta name="theme-color" content="#332F4D" />
-</head>
-<body>
-  <div id="root"></div>
+        <section class="term-progress" aria-labelledby="term-progress-title">
+          <div class="section-kicker" id="term-progress-title">Fall 2026</div>
+          <div class="progress-track"><span id="term-progress-bar"></span></div>
+          <p id="term-progress-copy">Preparing the semester...</p>
+        </section>
 
-  <script>
-    window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyC...",
-  authDomain: "kitas-docket.firebaseapp.com",
-  projectId: "kitas-docket",
-  storageBucket: "kitas-docket.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abc123"
-    };
+        <blockquote>“She believed she could, so she applied.”</blockquote>
+      </aside>
 
-    window.WORKER_URL = "https://kitas-docket-proxy-2.kitasdocket.workers.dev";
-  </script>
+      <div class="page-column">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="today-label">Fall 2026</p>
+            <h2 id="view-title">Today's docket</h2>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-box">
+              <span class="sr-only">Search the docket</span>
+              <span aria-hidden="true">⌕</span>
+              <input id="global-search" type="search" placeholder="Search readings, cases, dates..." />
+            </label>
+            <button class="button button-primary" id="open-add-item">+ Add item</button>
+          </div>
+        </header>
 
-  <script src="bundle.js"></script>
-</body>
+        <main id="main-content" tabindex="-1">
+          <section class="view is-active" data-view-panel="today">
+            <div class="hero-grid">
+              <article class="hero-card">
+                <p class="hero-date" id="hero-date"></p>
+                <h3 id="hero-heading">Your day, at a glance.</h3>
+                <p id="hero-summary">Loading the docket...</p>
+                <div class="hero-actions">
+                  <button class="button button-light" data-jump="calendar">See full calendar</button>
+                  <button class="button button-ghost-light" data-jump="courses">Browse courses</button>
+                </div>
+              </article>
+
+              <article class="confirmation-card">
+                <div class="card-heading">
+                  <div>
+                    <p class="section-kicker">Attention</p>
+                    <h3>Needs confirmation</h3>
+                  </div>
+                  <span class="count-badge" id="confirmation-count">0</span>
+                </div>
+                <div id="confirmation-preview"></div>
+                <button class="text-button" data-jump="calendar" data-filter="flagged">Review every flag →</button>
+              </article>
+            </div>
+
+            <section class="content-section">
+              <div class="section-heading">
+                <div>
+                  <p class="section-kicker">Weekly rhythm</p>
+                  <h3>Class schedule</h3>
+                </div>
+                <p>Monday · Wednesday · Friday</p>
+              </div>
+              <div class="schedule-strip" id="schedule-strip"></div>
+            </section>
+
+            <div class="dashboard-grid">
+              <section class="content-section next-section">
+                <div class="section-heading">
+                  <div>
+                    <p class="section-kicker">Coming up</p>
+                    <h3>Next on the docket</h3>
+                  </div>
+                  <div class="segmented-control" aria-label="Upcoming date range">
+                    <button class="is-active" data-range="7">7 days</button>
+                    <button data-range="30">30 days</button>
+                  </div>
+                </div>
+                <div class="agenda-list" id="upcoming-list"></div>
+              </section>
+
+              <aside class="content-section course-rail" aria-labelledby="course-rail-title">
+                <div class="section-heading compact">
+                  <div>
+                    <p class="section-kicker">Course files</p>
+                    <h3 id="course-rail-title">Fall classes</h3>
+                  </div>
+                </div>
+                <div id="course-rail"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="view" data-view-panel="courses">
+            <div class="view-intro">
+              <div>
+                <p class="section-kicker">Five clear workspaces</p>
+                <h3>Every course has its own lane.</h3>
+                <p>Readings, exams, notes, and unresolved details stay together instead of blending into one long list.</p>
+              </div>
+              <div class="course-select-wrap">
+                <label for="course-select">Open a course</label>
+                <select id="course-select"></select>
+              </div>
+            </div>
+            <div class="course-grid" id="course-grid"></div>
+            <section class="course-detail" id="course-detail"></section>
+          </section>
+
+          <section class="view" data-view-panel="calendar">
+            <div class="filter-bar">
+              <div class="filter-scroll" id="course-filters"></div>
+              <label class="checkbox-filter"><input type="checkbox" id="flagged-only" /> Needs confirmation only</label>
+            </div>
+            <div class="calendar-layout">
+              <section class="month-panel">
+                <div class="month-toolbar">
+                  <button class="icon-button" id="previous-month" aria-label="Previous month">←</button>
+                  <h3 id="month-title"></h3>
+                  <button class="icon-button" id="next-month" aria-label="Next month">→</button>
+                </div>
+                <div class="calendar-grid calendar-weekdays" aria-hidden="true">
+                  <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+              </section>
+              <aside class="day-panel">
+                <p class="section-kicker" id="selected-day-label">Selected date</p>
+                <h3 id="selected-day-title">Choose a day</h3>
+                <div id="selected-day-items"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="view" data-view-panel="materials">
+            <div class="view-intro">
+              <div>
+                <p class="section-kicker">Source library</p>
+                <h3>Syllabi and course notes</h3>
+                <p>Original materials stay separate from the calendar so the daily view remains readable.</p>
+              </div>
+            </div>
+            <div class="materials-grid" id="materials-grid"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <button class="is-active" data-view="today"><span>●</span>Today</button>
+      <button data-view="courses"><span>▦</span>Courses</button>
+      <button data-view="calendar"><span>□</span>Calendar</button>
+      <button data-view="materials"><span>≡</span>Materials</button>
+    </nav>
+
+    <dialog id="item-dialog">
+      <form method="dialog" id="item-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker">New docket item</p>
+            <h3>Add something important</h3>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button>
+        </div>
+        <label>Course<select name="courseId" id="item-course"></select></label>
+        <label>Type<select name="type"><option value="assignment">Assignment</option><option value="reading">Reading</option><option value="exam">Exam</option><option value="review">Review</option><option value="administrative">Administrative</option></select></label>
+        <label>Title<input name="title" required placeholder="What needs to happen?" /></label>
+        <div class="form-row">
+          <label>Date<input name="date" type="date" required /></label>
+          <label>End date, if needed<input name="endDate" type="date" /></label>
+        </div>
+        <label>Details<textarea name="details" rows="4" placeholder="Pages, cases, location, or instructions"></textarea></label>
+        <label class="checkbox-filter"><input name="flagged" type="checkbox" /> Mark as needing confirmation</label>
+        <p class="form-status" id="form-status" role="status"></p>
+        <div class="dialog-actions">
+          <button class="button button-secondary" type="button" data-close-dialog>Cancel</button>
+          <button class="button button-primary" type="submit">Save to docket</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="empty-state-template">
+      <div class="empty-state"><span aria-hidden="true">✓</span><p>Nothing scheduled here.</p></div>
+    </template>
+
+    <script src="seed-data.js"></script>
+    <script src="app.js"></script>
+  </body>
 </html>
