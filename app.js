@@ -5,6 +5,7 @@
     projectId: "kitas-docket",
     apiKey: "AIzaSyDB8_FkiyOmAptAiO3J9ttQ5ui310wtA0c",
   };
+  const FILE_CHUNK_BYTES = 450000;
   const seed = window.KITAS_DOCKET_SEED;
   const state = {
     courses: seed.courses,
@@ -19,6 +20,7 @@
     selectedDate: localDateKey(new Date()),
     search: "",
     connected: false,
+    readingGoals: { dailyTarget: 30, weeklyTarget: 150, log: {} },
   };
 
   const courseById = () => Object.fromEntries(state.courses.map((course) => [course.id, course]));
@@ -79,6 +81,10 @@
     return `https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents/kitasDocket/${documentName}?key=${FIREBASE.apiKey}`;
   }
 
+  function firestorePathUrl(documentPath) {
+    return `https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents/${documentPath}?key=${FIREBASE.apiKey}`;
+  }
+
   async function readDocument(documentName) {
     const response = await fetch(firestoreUrl(documentName));
     if (!response.ok) throw new Error(`Could not load ${documentName}`);
@@ -97,18 +103,55 @@
     return response.json();
   }
 
+  async function writeFileChunk(fileId, index, value) {
+    const path = `kitasDocketFiles/${fileId}/chunks/${String(index).padStart(4, "0")}`;
+    const response = await fetch(`${firestorePathUrl(path)}&updateMask.fieldPaths=value`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ fields: { value: { stringValue: value } } }),
+    });
+    if (!response.ok) throw new Error(`Could not save file part ${index + 1}`);
+  }
+
+  async function readFileChunk(fileId, index) {
+    const path = `kitasDocketFiles/${fileId}/chunks/${String(index).padStart(4, "0")}`;
+    const response = await fetch(firestorePathUrl(path));
+    if (!response.ok) throw new Error(`Could not load file part ${index + 1}`);
+    const document = await response.json();
+    return document?.fields?.value?.stringValue || "";
+  }
+
+  function bytesToBase64(bytes) {
+    let binary = "";
+    for (let offset = 0; offset < bytes.length; offset += 32768) {
+      binary += String.fromCharCode(...bytes.subarray(offset, offset + 32768));
+    }
+    return btoa(binary);
+  }
+
+  function base64ToBytes(value) {
+    const binary = atob(value);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return bytes;
+  }
+
   async function hydrate() {
     const requests = await Promise.allSettled([
       readDocument("courses"),
       readDocument("items"),
       readDocument("materialsV2"),
       readDocument("standingFlags"),
+      readDocument("readingGoals"),
     ]);
-    const [courses, items, materials, flags] = requests.map((request) => request.status === "fulfilled" ? request.value : null);
+    const [courses, items, materials, flags, readingGoals] = requests.map((request) => request.status === "fulfilled" ? request.value : null);
     if (Array.isArray(courses) && courses.length) state.courses = courses;
     if (Array.isArray(items) && items.length) state.items = items;
     if (Array.isArray(materials) && materials.length) state.materials = materials;
     if (Array.isArray(flags) && flags.length) state.standingFlags = flags;
+    if (readingGoals && typeof readingGoals === "object") {
+      state.readingGoals = { ...state.readingGoals, ...readingGoals, log: readingGoals.log || {} };
+    }
     state.connected = requests.some((request) => request.status === "fulfilled");
     if (!state.connected) console.warn("Using verified built-in docket data while live storage is unavailable.");
     renderAll();
@@ -178,10 +221,36 @@
     }));
     const flags = [...state.standingFlags, ...dateFlags];
     $("#confirmation-count").textContent = flags.length;
-    $("#confirmation-preview").innerHTML = flags.slice(0, 3).map((flag) => {
+    $("#confirmation-preview").innerHTML = flags.slice(0, 2).map((flag) => {
       const course = courseById()[flag.courseId];
       return `<div class="flag-preview"><strong>${escapeHTML(flag.title)}</strong><p>${escapeHTML(course?.name || "School calendar")} · ${escapeHTML(flag.details)}</p></div>`;
     }).join("");
+  }
+
+  function startOfWeek(date) {
+    const result = new Date(date);
+    const offset = (result.getDay() + 6) % 7;
+    result.setDate(result.getDate() - offset);
+    return result;
+  }
+
+  function renderPageGoal(target, completed, label) {
+    const safeTarget = Math.max(1, Number(target) || 1);
+    const safeCompleted = Math.max(0, Number(completed) || 0);
+    const percent = Math.min(100, Math.round((safeCompleted / safeTarget) * 100));
+    return `<div class="goal-copy"><strong>${safeCompleted} <span>/ ${safeTarget} pages</span></strong><small>${escapeHTML(label)}</small></div><div class="goal-track" aria-label="${escapeHTML(label)}: ${percent}% complete"><span style="width:${percent}%"></span></div><b>${percent}%</b>`;
+  }
+
+  function renderReadingProgress() {
+    const today = new Date();
+    const todayKey = localDateKey(today);
+    const weekStart = startOfWeek(today);
+    const weekKeys = Array.from({ length: 7 }, (_, index) => localDateKey(addDays(weekStart, index)));
+    const todayPages = Number(state.readingGoals.log[todayKey] || 0);
+    const weekPages = weekKeys.reduce((total, key) => total + Number(state.readingGoals.log[key] || 0), 0);
+    $("#daily-page-goal").innerHTML = renderPageGoal(state.readingGoals.dailyTarget, todayPages, "Today");
+    $("#weekly-page-goal").innerHTML = renderPageGoal(state.readingGoals.weeklyTarget, weekPages, "This week");
+    $("#pages-read-today").value = todayPages;
   }
 
   function groupByDate(items) {
@@ -236,6 +305,7 @@
     $("#course-select").innerHTML = options;
     $("#course-select").value = state.selectedCourseId;
     $("#item-course").innerHTML = `<option value="">School-wide</option>${options}`;
+    $("#upload-course").innerHTML = options;
     $("#course-filters").innerHTML = `<button class="filter-chip is-active" data-course-filter="all">All courses</button>${state.courses.map((course) => `<button class="filter-chip" data-course-filter="${escapeHTML(course.id)}">${escapeHTML(course.name)}</button>`).join("")}`;
   }
 
@@ -250,6 +320,7 @@
   function renderCourseDetail() {
     const course = courseById()[state.selectedCourseId] || state.courses[0];
     const items = state.items.filter((item) => item.courseId === course.id).sort((a, b) => a.date.localeCompare(b.date));
+    const materials = state.materials.filter((material) => material.courseId === course.id);
     $("#course-detail").style.setProperty("--course-color", course.color);
     $("#course-detail").innerHTML = `
       <div class="course-detail-header">
@@ -266,6 +337,13 @@
           <div class="meta-card"><small>Time</small><strong>${escapeHTML(course.time)}${course.endTime ? `-${escapeHTML(course.endTime)}` : ""}</strong></div>
         </div>
       </div>
+      <section class="course-resources">
+        <div><p class="section-kicker">Materials & resources</p><h4>${materials.length} saved document${materials.length === 1 ? "" : "s"}</h4><p>Syllabi, assignment sheets, outlines, and other course files stay together here.</p></div>
+        <div class="course-resource-actions">
+          ${materials.slice(0, 2).map((material) => material.url ? `<a href="${escapeHTML(material.url)}" target="_blank" rel="noopener">${escapeHTML(material.title)}</a>` : material.fileId ? `<button class="course-resource-link" data-open-material="${escapeHTML(material.id)}">${escapeHTML(material.title)}</button>` : `<span>${escapeHTML(material.title)}</span>`).join("")}
+          <button class="button button-primary" data-open-upload data-course-id="${escapeHTML(course.id)}">+ Add document</button>
+        </div>
+      </section>
       <div class="course-timeline">
         <h4>Semester plan</h4>
         ${items.length ? items.map((item) => `
@@ -308,16 +386,29 @@
   }
 
   function renderMaterials() {
-    $("#materials-grid").innerHTML = state.materials.length ? state.materials.map((material) => {
-      const course = courseById()[material.courseId];
-      return `<article class="material-card"><span class="material-type">${escapeHTML(material.type || "Course material")}</span><h4>${escapeHTML(material.title)}</h4><p>${escapeHTML(material.content || "Source material saved to the docket.")}</p><footer>${escapeHTML(course?.name || "General")} · Added ${escapeHTML(material.addedDate || "")}</footer></article>`;
-    }).join("") : $("#empty-state-template").innerHTML;
+    $("#materials-grid").innerHTML = state.courses.map((course) => {
+      const materials = state.materials.filter((material) => material.courseId === course.id);
+      return `<section class="course-material-group" style="--course-color:${escapeHTML(course.color)}">
+        <header><span class="course-swatch"></span><div><p class="section-kicker">${escapeHTML(course.code)}</p><h4>${escapeHTML(course.name)}</h4></div><span>${materials.length} file${materials.length === 1 ? "" : "s"}</span></header>
+        <div class="course-material-list">
+          ${materials.map((material) => `<article class="material-card"><span class="material-type">${escapeHTML(material.type || "Course material")}</span><h5>${escapeHTML(material.title)}</h5><p>${escapeHTML(material.content || "Source material saved to the docket.")}</p><footer>Added ${escapeHTML(material.addedDate || "")}${material.size ? ` · ${escapeHTML(formatFileSize(material.size))}` : ""}</footer>${material.url ? `<a class="material-link" href="${escapeHTML(material.url)}" target="_blank" rel="noopener">Open document ↗</a>` : material.fileId ? `<button class="material-link" data-open-material="${escapeHTML(material.id)}">Open document ↗</button>` : ""}</article>`).join("")}
+          <button class="upload-card" data-open-upload data-course-id="${escapeHTML(course.id)}"><span>+</span><strong>Add syllabus or resource</strong><small>PDF, Word, text, or image</small></button>
+        </div>
+      </section>`;
+    }).join("");
+  }
+
+  function formatFileSize(bytes) {
+    if (!bytes) return "";
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   function renderAll() {
     renderHeader();
     renderSchedule();
     renderConfirmations();
+    renderReadingProgress();
     renderUpcoming();
     renderCourseRail();
     populateCourseControls();
@@ -365,6 +456,123 @@
     }
   }
 
+  async function saveReadingGoals(form) {
+    const data = new FormData(form);
+    const nextGoals = {
+      ...state.readingGoals,
+      dailyTarget: Math.max(1, Number(data.get("dailyTarget")) || 1),
+      weeklyTarget: Math.max(1, Number(data.get("weeklyTarget")) || 1),
+    };
+    $("#goal-status").textContent = "Saving...";
+    try {
+      await writeDocument("readingGoals", nextGoals);
+      state.readingGoals = nextGoals;
+      $("#goal-dialog").close();
+      renderReadingProgress();
+    } catch (error) {
+      $("#goal-status").textContent = "These goals could not be saved. Please try again.";
+      console.error(error);
+    }
+  }
+
+  async function savePagesRead(form) {
+    const data = new FormData(form);
+    const todayKey = localDateKey(new Date());
+    const nextGoals = {
+      ...state.readingGoals,
+      log: { ...state.readingGoals.log, [todayKey]: Math.max(0, Number(data.get("pagesRead")) || 0) },
+    };
+    const button = form.querySelector("button[type=submit]");
+    button.textContent = "Saving...";
+    try {
+      await writeDocument("readingGoals", nextGoals);
+      state.readingGoals = nextGoals;
+      renderReadingProgress();
+      button.textContent = "Saved";
+      setTimeout(() => { button.textContent = "Save"; }, 1200);
+    } catch (error) {
+      button.textContent = "Try again";
+      console.error(error);
+    }
+  }
+
+  async function uploadMaterial(form) {
+    const data = new FormData(form);
+    const file = data.get("document");
+    if (!(file instanceof File) || !file.size) return;
+    if (file.size > 15 * 1024 * 1024) {
+      $("#upload-status").textContent = "Please choose a file smaller than 15 MB.";
+      return;
+    }
+    const courseId = String(data.get("courseId"));
+    const uniqueId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+    const fileId = `file-${Date.now()}-${uniqueId}`;
+    $("#upload-status").textContent = "Uploading document...";
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const chunks = [];
+      for (let offset = 0; offset < bytes.length; offset += FILE_CHUNK_BYTES) {
+        chunks.push(bytesToBase64(bytes.subarray(offset, offset + FILE_CHUNK_BYTES)));
+      }
+      for (let index = 0; index < chunks.length; index += 3) {
+        $("#upload-status").textContent = `Uploading document... ${Math.min(index + 3, chunks.length)} of ${chunks.length} parts`;
+        await Promise.all(chunks.slice(index, index + 3).map((chunk, batchIndex) => writeFileChunk(fileId, index + batchIndex, chunk)));
+      }
+      const material = {
+        id: `upload-${Date.now()}`,
+        courseId,
+        title: file.name,
+        type: file.type || "Course document",
+        addedDate: localDateKey(new Date()),
+        content: String(data.get("notes") || "Uploaded course resource.").trim() || "Uploaded course resource.",
+        size: file.size,
+        fileId,
+        chunkCount: chunks.length,
+        mimeType: file.type || "application/octet-stream",
+      };
+      const nextMaterials = [...state.materials, material];
+      await writeDocument("materialsV2", nextMaterials);
+      state.materials = nextMaterials;
+      form.reset();
+      $("#upload-dialog").close();
+      renderMaterials();
+      renderCourseDetail();
+    } catch (error) {
+      $("#upload-status").textContent = "This document could not be uploaded. Please try again.";
+      console.error(error);
+    }
+  }
+
+  async function openMaterial(materialId, trigger) {
+    const material = state.materials.find((entry) => entry.id === materialId);
+    if (!material?.fileId || !material.chunkCount) return;
+    const originalText = trigger.textContent;
+    const previewWindow = window.open("", "_blank");
+    if (previewWindow) previewWindow.document.body.innerHTML = "<p style='font:16px system-ui;padding:24px'>Loading document...</p>";
+    trigger.textContent = "Opening...";
+    trigger.disabled = true;
+    try {
+      const encodedChunks = await Promise.all(Array.from({ length: material.chunkCount }, (_, index) => readFileChunk(material.fileId, index)));
+      const blob = new Blob(encodedChunks.map(base64ToBytes), { type: material.mimeType || "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      if (previewWindow) previewWindow.location.href = url;
+      else {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = material.title;
+        link.click();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (error) {
+      if (previewWindow) previewWindow.close();
+      window.alert("This document could not be opened. Please try again.");
+      console.error(error);
+    } finally {
+      trigger.textContent = originalText;
+      trigger.disabled = false;
+    }
+  }
+
   function bindEvents() {
     document.addEventListener("click", (event) => {
       const viewButton = event.target.closest("[data-view]");
@@ -398,6 +606,16 @@
         renderCalendar();
       }
       if (event.target.closest("[data-close-dialog]")) $("#item-dialog").close();
+      const uploadButton = event.target.closest("[data-open-upload]");
+      if (uploadButton) {
+        $("#upload-course").value = uploadButton.dataset.courseId || state.selectedCourseId || state.courses[0].id;
+        $("#upload-status").textContent = "";
+        $("#upload-dialog").showModal();
+      }
+      const materialButton = event.target.closest("[data-open-material]");
+      if (materialButton) openMaterial(materialButton.dataset.openMaterial, materialButton);
+      if (event.target.closest("[data-close-upload]")) $("#upload-dialog").close();
+      if (event.target.closest("[data-close-goals]")) $("#goal-dialog").close();
     });
 
     $("#course-select").addEventListener("change", (event) => openCourse(event.target.value));
@@ -426,6 +644,24 @@
     $("#item-form").addEventListener("submit", (event) => {
       event.preventDefault();
       saveNewItem(event.currentTarget);
+    });
+    $("#pages-read-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      savePagesRead(event.currentTarget);
+    });
+    $("#open-goal-settings").addEventListener("click", () => {
+      $("#goal-form [name=dailyTarget]").value = state.readingGoals.dailyTarget;
+      $("#goal-form [name=weeklyTarget]").value = state.readingGoals.weeklyTarget;
+      $("#goal-status").textContent = "";
+      $("#goal-dialog").showModal();
+    });
+    $("#goal-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveReadingGoals(event.currentTarget);
+    });
+    $("#upload-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      uploadMaterial(event.currentTarget);
     });
   }
 

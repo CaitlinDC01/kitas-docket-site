@@ -63,29 +63,17 @@
 
         <main id="main-content" tabindex="-1">
           <section class="view is-active" data-view-panel="today">
-            <div class="hero-grid">
-              <article class="hero-card">
+            <article class="hero-card hero-card-compact">
+              <div class="hero-copy">
                 <p class="hero-date" id="hero-date"></p>
                 <h3 id="hero-heading">Your day, at a glance.</h3>
                 <p id="hero-summary">Loading the docket...</p>
-                <div class="hero-actions">
-                  <button class="button button-light" data-jump="calendar">See full calendar</button>
-                  <button class="button button-ghost-light" data-jump="courses">Browse courses</button>
-                </div>
-              </article>
-
-              <article class="confirmation-card">
-                <div class="card-heading">
-                  <div>
-                    <p class="section-kicker">Attention</p>
-                    <h3>Needs confirmation</h3>
-                  </div>
-                  <span class="count-badge" id="confirmation-count">0</span>
-                </div>
-                <div id="confirmation-preview"></div>
-                <button class="text-button" data-jump="calendar" data-filter="flagged">Review every flag →</button>
-              </article>
-            </div>
+              </div>
+              <div class="hero-actions">
+                <button class="button button-light" data-jump="calendar">Full calendar</button>
+                <button class="button button-ghost-light" data-jump="courses">Courses</button>
+              </div>
+            </article>
 
             <section class="content-section">
               <div class="section-heading">
@@ -96,6 +84,32 @@
                 <p>Monday · Wednesday · Friday</p>
               </div>
               <div class="schedule-strip" id="schedule-strip"></div>
+            </section>
+
+            <section class="confirmation-strip" aria-labelledby="confirmation-title">
+              <div class="confirmation-summary">
+                <span class="count-badge" id="confirmation-count">0</span>
+                <div>
+                  <p class="section-kicker">Awaiting confirmation</p>
+                  <h3 id="confirmation-title">Details to keep an eye on</h3>
+                </div>
+              </div>
+              <div class="confirmation-preview-row" id="confirmation-preview"></div>
+              <button class="text-button" data-jump="calendar" data-filter="flagged">Review all →</button>
+            </section>
+
+            <section class="reading-progress" aria-labelledby="reading-progress-title">
+              <div class="reading-progress-heading">
+                <p class="section-kicker">Reading pace</p>
+                <h3 id="reading-progress-title">Page goals</h3>
+              </div>
+              <div class="page-goal" id="daily-page-goal"></div>
+              <div class="page-goal" id="weekly-page-goal"></div>
+              <form class="pages-read-form" id="pages-read-form">
+                <label for="pages-read-today">Pages read today</label>
+                <div><input id="pages-read-today" name="pagesRead" type="number" min="0" inputmode="numeric" /><button class="button button-primary" type="submit">Save</button></div>
+                <button class="goal-settings-button" id="open-goal-settings" type="button">Edit goals</button>
+              </form>
             </section>
 
             <div class="dashboard-grid">
@@ -171,8 +185,9 @@
               <div>
                 <p class="section-kicker">Source library</p>
                 <h3>Syllabi and course notes</h3>
-                <p>Original materials stay separate from the calendar so the daily view remains readable.</p>
+                <p>Keep each syllabus, assignment sheet, outline, and important class document with the course it belongs to.</p>
               </div>
+              <button class="button button-primary" data-open-upload>+ Upload document</button>
             </div>
             <div class="materials-grid" id="materials-grid"></div>
           </section>
@@ -209,6 +224,48 @@
         <div class="dialog-actions">
           <button class="button button-secondary" type="button" data-close-dialog>Cancel</button>
           <button class="button button-primary" type="submit">Save to docket</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="upload-dialog">
+      <form method="dialog" id="upload-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker">Course resources</p>
+            <h3>Add a document</h3>
+          </div>
+          <button class="icon-button" type="button" data-close-upload aria-label="Close">×</button>
+        </div>
+        <label>Course<select name="courseId" id="upload-course" required></select></label>
+        <label>Document<input name="document" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg" required /></label>
+        <p class="upload-help">PDF, Word, text, or image · up to 15 MB</p>
+        <label>Notes<textarea name="notes" rows="3" placeholder="Optional: what this document contains"></textarea></label>
+        <p class="form-status" id="upload-status" role="status"></p>
+        <div class="dialog-actions">
+          <button class="button button-secondary" type="button" data-close-upload>Cancel</button>
+          <button class="button button-primary" type="submit">Upload to course</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="goal-dialog">
+      <form method="dialog" id="goal-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker">Reading pace</p>
+            <h3>Set page goals</h3>
+          </div>
+          <button class="icon-button" type="button" data-close-goals aria-label="Close">×</button>
+        </div>
+        <div class="form-row">
+          <label>Daily goal<input name="dailyTarget" type="number" min="1" inputmode="numeric" required /></label>
+          <label>Weekly goal<input name="weeklyTarget" type="number" min="1" inputmode="numeric" required /></label>
+        </div>
+        <p class="form-status" id="goal-status" role="status"></p>
+        <div class="dialog-actions">
+          <button class="button button-secondary" type="button" data-close-goals>Cancel</button>
+          <button class="button button-primary" type="submit">Save goals</button>
         </div>
       </form>
     </dialog>
