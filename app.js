@@ -55,6 +55,15 @@
     return new Date(date.getFullYear(), date.getMonth(), 1, 12);
   }
 
+  function timeToMinutes(value) {
+    const match = String(value).match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return Number.MAX_SAFE_INTEGER;
+    let hour = Number(match[1]) % 12;
+    const minute = Number(match[2]);
+    if (match[3].toUpperCase() === "PM") hour += 12;
+    return hour * 60 + minute;
+  }
+
   function formatDate(date, options = {}) {
     return parseDate(typeof date === "string" ? date : localDateKey(date)).toLocaleDateString("en-US", options);
   }
@@ -150,7 +159,7 @@
   }
 
   function renderSchedule() {
-    const courses = [...state.courses].sort((a, b) => a.time.localeCompare(b.time));
+    const courses = [...state.courses].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
     $("#schedule-strip").innerHTML = courses.map((course) => `
       <article class="class-block" style="--course-color:${escapeHTML(course.color)}">
         <time>${escapeHTML(course.time)}${course.endTime ? `-${escapeHTML(course.endTime)}` : ""}</time>
