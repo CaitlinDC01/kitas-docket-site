@@ -11,8 +11,7 @@
       time: "9:00 AM",
       endTime: "9:50 AM",
       color: "#74a963",
-      syllabusUrl: "",
-      syllabusStatus: "Original PDF needs to be re-uploaded",
+      syllabusUrl: "syllabi/property-i-fall-2026.pdf",
       description: "Property rights, estates, future interests, ownership, and personal property.",
       standingNote: "Before each class, submit a one-page case brief for one case from that day's assigned reading to propertycasebriefs@gmail.com. No brief is required when the reading contains no case.",
     },
@@ -342,6 +341,16 @@
 
   const materials = [
     {
+      id: "property-syllabus",
+      courseId: "property",
+      title: "Property I - Fall 2026 Syllabus",
+      type: "Original syllabus PDF",
+      addedDate: "2026-08-16",
+      content: "LAW 506 Section 4 with Professor Emeka Duruigbo, including course policies, recurring case briefs, exams, and the complete reading schedule.",
+      size: 575644,
+      url: "syllabi/property-i-fall-2026.pdf",
+    },
+    {
       id: "contracts-syllabus",
       courseId: "contracts",
       title: "Contracts I - Fall 2026 Syllabus",
@@ -435,7 +444,6 @@
       { id: "property-undated-fee-tail", courseId: "property", title: "Fee Tail has no date", details: "Pages 317-319 appear without a clearly printed ‘Before This Date.’" },
       { id: "property-comprehensive", courseId: "property", title: "Comprehensive Examination is TBA", details: "No date, time, or location is provided." },
       { id: "property-take-home", courseId: "property", title: "Property take-home work will be announced", details: "Several problems and hypotheticals are expected, but the syllabus gives no advance dates." },
-      { id: "property-syllabus-file", courseId: "property", title: "Property syllabus PDF needs to be re-uploaded", details: "The verified Property schedule is saved in the docket, but the original PDF is not available in the current workspace. Use Add document to attach it when available." },
       { id: "contracts-professor-final", courseId: "contracts", title: "Confirm the professor's Contracts final date", details: "The schedule places it under Nov. 23, 2026, but the event line repeats a stale Nov. 24, 2025 date. It also labels 11:00 AM and Room 206 as tentative." },
       { id: "contracts-comp-final", courseId: "contracts", title: "Contracts comprehensive final date is TBD", details: "The exam will occur during Nov. 30-Dec. 10, but the law school has not listed the exact date, time, or room." },
       { id: "contracts-remote-nov4", courseId: "contracts", title: "Nov. 4 Contracts class may be remote", details: "The syllabus says this class session may be conducted remotely; confirm before class." },
