@@ -172,6 +172,16 @@ select, input, textarea { width: 100%; border: 1px solid var(--line); border-rad
 .meta-card { padding: 14px; border-radius: 14px; background: #f6f2ed; }
 .meta-card small { display: block; color: var(--muted); font-size: .67rem; font-weight: 700; text-transform: uppercase; }
 .meta-card strong { display: block; margin-top: 5px; font-size: .84rem; }
+.meta-card a { display: block; margin-top: 5px; overflow-wrap: anywhere; color: var(--burgundy); font-size: .78rem; font-weight: 700; }
+.meta-card-wide { grid-column: 1 / -1; }
+.course-alert { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 12px; align-items: start; margin-top: 22px; padding: 17px 18px; border: 1px solid #c94d4d; border-radius: 16px; background: #fff2f1; color: #681d24; }
+.course-alert > span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #9e2633; color: #fff; font-weight: 900; }
+.course-alert strong { display: block; font-size: .9rem; text-transform: uppercase; letter-spacing: .04em; }
+.course-alert p { margin: 4px 0 0; color: #681d24; font-size: .82rem; line-height: 1.5; }
+.course-information-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 22px; }
+.course-info-card { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #fbfaf8; }
+.course-info-card ul { display: grid; gap: 8px; margin: 10px 0 0; padding-left: 18px; }
+.course-info-card li { color: var(--muted); font-size: .77rem; line-height: 1.48; }
 .course-timeline { margin-top: 24px; }
 .course-timeline > h4 { margin-bottom: 6px; font-family: "Playfair Display", serif; font-size: 1.2rem; }
 .timeline-row { display: grid; grid-template-columns: 110px 18px minmax(0,1fr) auto; gap: 12px; align-items: start; padding: 16px 0; border-top: 1px solid var(--line); }
@@ -313,6 +323,7 @@ dialog label { display: grid; gap: 6px; color: var(--muted); font-size: .76rem; 
   .course-detail { padding: 22px 17px; }
   .course-detail-header { grid-template-columns: 1fr; }
   .course-meta { grid-template-columns: 1fr 1fr; }
+  .course-information-grid { grid-template-columns: 1fr; }
   .timeline-row { grid-template-columns: 86px 14px minmax(0,1fr); }
   .timeline-row .flag-pill { grid-column: 3; justify-self: start; }
   .filter-bar { align-items: stretch; flex-direction: column; }
