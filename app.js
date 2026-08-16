@@ -335,8 +335,20 @@
           <div class="meta-card"><small>Room</small><strong>${escapeHTML(course.room)}</strong></div>
           <div class="meta-card"><small>Meeting</small><strong>M/W/F</strong></div>
           <div class="meta-card"><small>Time</small><strong>${escapeHTML(course.time)}${course.endTime ? `-${escapeHTML(course.endTime)}` : ""}</strong></div>
+          ${course.email ? `<div class="meta-card meta-card-wide"><small>Email</small><a href="mailto:${escapeHTML(course.email)}">${escapeHTML(course.email)}</a></div>` : ""}
+          ${course.phone ? `<div class="meta-card"><small>Phone</small><a href="tel:${escapeHTML(course.phone.replaceAll(/[^\d+]/g, ""))}">${escapeHTML(course.phone)}</a></div>` : ""}
+          ${course.officeLocation ? `<div class="meta-card"><small>Office</small><strong>${escapeHTML(course.officeLocation)}</strong></div>` : ""}
+          ${course.officeHours ? `<div class="meta-card meta-card-wide"><small>Office hours</small><strong>${escapeHTML(course.officeHours)}</strong></div>` : ""}
         </div>
       </div>
+      ${course.alert ? `<aside class="course-alert" role="alert"><span aria-hidden="true">!</span><div><strong>Course integrity warning</strong><p>${escapeHTML(course.alert)}</p></div></aside>` : ""}
+      ${(course.requiredMaterials?.length || course.grading?.length || course.rules?.length) ? `
+        <div class="course-information-grid">
+          ${course.requiredMaterials?.length ? `<section class="course-info-card"><p class="section-kicker">Required materials</p><ul>${course.requiredMaterials.map((entry) => `<li>${escapeHTML(entry)}</li>`).join("")}</ul></section>` : ""}
+          ${course.grading?.length ? `<section class="course-info-card"><p class="section-kicker">Grading</p><ul>${course.grading.map((entry) => `<li>${escapeHTML(entry)}</li>`).join("")}</ul></section>` : ""}
+          ${course.rules?.length ? `<section class="course-info-card"><p class="section-kicker">Rules & reminders</p><ul>${course.rules.map((entry) => `<li>${escapeHTML(entry)}</li>`).join("")}</ul></section>` : ""}
+        </div>
+      ` : ""}
       <section class="course-resources">
         <div><p class="section-kicker">Materials & resources</p><h4>${materials.length} saved document${materials.length === 1 ? "" : "s"}</h4><p>Syllabi, assignment sheets, outlines, and other course files stay together here.</p></div>
         <div class="course-resource-actions">
