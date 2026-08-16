@@ -12,6 +12,7 @@
     items: seed.items,
     materials: seed.materials,
     standingFlags: seed.standingFlags,
+    quickLinks: seed.quickLinks || {},
     selectedCourseId: "civil-procedure",
     activeCourseFilter: "all",
     flaggedOnly: false,
@@ -352,12 +353,13 @@
       <section class="course-resources">
         <div><p class="section-kicker">Materials & resources</p><h4>${materials.length} saved document${materials.length === 1 ? "" : "s"}</h4><p>Syllabi, assignment sheets, outlines, and other course files stay together here.</p></div>
         <div class="course-resource-actions">
+          ${course.syllabusUrl ? `<a class="syllabus-button" href="${escapeHTML(course.syllabusUrl)}" target="_blank" rel="noopener">Open syllabus ↗</a>` : `<button class="course-resource-link syllabus-pending" data-open-upload data-course-id="${escapeHTML(course.id)}">Upload original syllabus</button>`}
           ${materials.slice(0, 2).map((material) => material.url ? `<a href="${escapeHTML(material.url)}" target="_blank" rel="noopener">${escapeHTML(material.title)}</a>` : material.fileId ? `<button class="course-resource-link" data-open-material="${escapeHTML(material.id)}">${escapeHTML(material.title)}</button>` : `<span>${escapeHTML(material.title)}</span>`).join("")}
           <button class="button button-primary" data-open-upload data-course-id="${escapeHTML(course.id)}">+ Add document</button>
         </div>
       </section>
       <div class="course-timeline">
-        <h4>Semester plan</h4>
+        <div class="timeline-heading"><h4>Semester plan</h4><button class="button button-secondary" data-add-course-item="${escapeHTML(course.id)}">+ Add assignment or reading</button></div>
         ${items.length ? items.map((item) => `
           <article class="timeline-row">
             <time>${escapeHTML(dateRangeLabel(item))}</time>
@@ -398,7 +400,14 @@
   }
 
   function renderMaterials() {
-    $("#materials-grid").innerHTML = state.courses.map((course) => {
+    const syllabusLibrary = `<section class="syllabus-library">
+      <div class="syllabus-library-heading"><div><p class="section-kicker">Always within reach</p><h3>Fall 2026 syllabus library</h3><p>Open the original course PDFs from any device.</p></div>
+      <div class="library-quick-actions"><a class="button button-primary" href="${escapeHTML(state.quickLinks.firstTwoWeeksChecklist || "#")}" target="_blank" rel="noopener">First two weeks checklist ↗</a><button class="button button-secondary" type="button" disabled title="Add Rekita's OneNote link when it is live">OneNote notes · coming soon</button></div></div>
+      <div class="syllabus-link-grid">${state.courses.map((course) => course.syllabusUrl
+        ? `<a class="syllabus-link-card" href="${escapeHTML(course.syllabusUrl)}" target="_blank" rel="noopener" style="--course-color:${escapeHTML(course.color)}"><span class="course-swatch"></span><strong>${escapeHTML(course.name)}</strong><small>Open syllabus PDF ↗</small></a>`
+        : `<button class="syllabus-link-card is-pending" data-open-upload data-course-id="${escapeHTML(course.id)}" style="--course-color:${escapeHTML(course.color)}"><span class="course-swatch"></span><strong>${escapeHTML(course.name)}</strong><small>${escapeHTML(course.syllabusStatus || "Upload syllabus PDF")}</small></button>`).join("")}</div>
+    </section>`;
+    $("#materials-grid").innerHTML = syllabusLibrary + state.courses.map((course) => {
       const materials = state.materials.filter((material) => material.courseId === course.id);
       return `<section class="course-material-group" style="--course-color:${escapeHTML(course.color)}">
         <header><span class="course-swatch"></span><div><p class="section-kicker">${escapeHTML(course.code)}</p><h4>${escapeHTML(course.name)}</h4></div><span>${materials.length} file${materials.length === 1 ? "" : "s"}</span></header>
@@ -437,6 +446,14 @@
     renderCourseDetail();
     setView("courses");
     setTimeout(() => $("#course-detail").scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }
+
+  function openItemDialog(courseId = "", type = "assignment") {
+    $("#item-form [name=date]").value = localDateKey(new Date());
+    $("#item-course").value = courseId;
+    $("#item-form [name=type]").value = type;
+    $("#form-status").textContent = "";
+    $("#item-dialog").showModal();
   }
 
   async function saveNewItem(form) {
@@ -600,6 +617,8 @@
       }
       const courseButton = event.target.closest("[data-open-course]");
       if (courseButton) openCourse(courseButton.dataset.openCourse);
+      const addCourseItemButton = event.target.closest("[data-add-course-item]");
+      if (addCourseItemButton) openItemDialog(addCourseItemButton.dataset.addCourseItem, "assignment");
       const rangeButton = event.target.closest("[data-range]");
       if (rangeButton) {
         state.rangeDays = Number(rangeButton.dataset.range);
@@ -649,9 +668,7 @@
       renderCalendar();
     });
     $("#open-add-item").addEventListener("click", () => {
-      $("#item-form [name=date]").value = localDateKey(new Date());
-      $("#form-status").textContent = "";
-      $("#item-dialog").showModal();
+      openItemDialog(state.selectedCourseId, "assignment");
     });
     $("#item-form").addEventListener("submit", (event) => {
       event.preventDefault();
