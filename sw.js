@@ -1,4 +1,4 @@
-const CACHE_NAME = "kitas-docket-v4";
+const CACHE_NAME = "kitas-docket-v5";
 const APP_SHELL = [
   "./",
   "index.html",
@@ -6,10 +6,10 @@ const APP_SHELL = [
   "seed-data.js",
   "app.js",
   "manifest.webmanifest",
-  "favicon-32.png",
-  "apple-touch-icon.png",
-  "app-icon-192.png",
-  "app-icon-512.png"
+  "kd-favicon-32.png",
+  "kd-apple-touch-icon.png",
+  "kd-icon-192.png",
+  "kd-icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {

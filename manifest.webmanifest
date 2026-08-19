@@ -9,13 +9,13 @@
   "theme_color": "#6f1533",
   "icons": [
     {
-      "src": "app-icon-192.png",
+      "src": "kd-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "app-icon-512.png",
+      "src": "kd-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
