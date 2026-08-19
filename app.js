@@ -21,6 +21,8 @@
     selectedDate: localDateKey(new Date()),
     search: "",
     connected: false,
+    activeItemId: "",
+    activeResourceTab: "onenote",
     readingGoals: { dailyTarget: 30, weeklyTarget: 150, log: {} },
   };
 
@@ -216,6 +218,7 @@
   function renderConfirmations() {
     const dateFlags = state.items.filter((item) => item.flagged).map((item) => ({
       id: item.id,
+      itemId: item.id,
       courseId: item.courseId,
       title: item.title,
       details: `${dateRangeLabel(item)} · ${item.details}`,
@@ -224,7 +227,9 @@
     $("#confirmation-count").textContent = flags.length;
     $("#confirmation-preview").innerHTML = flags.slice(0, 2).map((flag) => {
       const course = courseById()[flag.courseId];
-      return `<div class="flag-preview"><strong>${escapeHTML(flag.title)}</strong><p>${escapeHTML(course?.name || "School calendar")} · ${escapeHTML(flag.details)}</p></div>`;
+      const tag = flag.itemId ? "button" : "div";
+      const itemAttribute = flag.itemId ? ` data-open-item="${escapeHTML(flag.itemId)}" aria-label="Open details for ${escapeHTML(flag.title)}"` : "";
+      return `<${tag} class="flag-preview"${itemAttribute}><strong>${escapeHTML(flag.title)}</strong><p>${escapeHTML(course?.name || "School calendar")} · ${escapeHTML(flag.details)}</p></${tag}>`;
     }).join("");
   }
 
@@ -285,12 +290,27 @@
   function renderAgendaItem(item) {
     const course = courseById()[item.courseId];
     return `
-      <article class="agenda-item" style="--course-color:${escapeHTML(course?.color || "#c49a53")}">
+      <button class="agenda-item ${item.done ? "is-done" : ""}" data-open-item="${escapeHTML(item.id)}" style="--course-color:${escapeHTML(course?.color || "#c49a53")}" aria-label="Open details for ${escapeHTML(item.title)}">
         <span class="course-dot" aria-hidden="true"></span>
         <div><h4>${escapeHTML(item.title)}</h4><p>${escapeHTML(course?.name || "School calendar")}${item.endDate ? ` · through ${formatDate(item.endDate, { month: "short", day: "numeric" })}` : ""}${item.flagged ? " · Needs confirmation" : ""}</p></div>
-        <span class="type-badge">${escapeHTML(item.type)}</span>
-      </article>
+        <span class="type-badge">${item.done ? "Completed" : escapeHTML(item.type)}</span>
+      </button>
     `;
+  }
+
+  function renderHomeResources() {
+    const links = [
+      { key: "oneNote", label: "Kita's OneNote", note: "Class notes", mark: "N" },
+      { key: "firstTwoWeeksChecklist", label: "Assignment checklist", note: "First two weeks", mark: "✓" },
+      { key: "caseLog", label: "Case log", note: "Google Sheets", mark: "§" },
+    ];
+    $("#home-resource-links").innerHTML = links.map((link) => `
+      <a class="home-resource-link" href="${escapeHTML(state.quickLinks[link.key] || "#")}" target="_blank" rel="noopener">
+        <span class="home-resource-mark" aria-hidden="true">${link.mark}</span>
+        <span><strong>${escapeHTML(link.label)}</strong><small>${escapeHTML(link.note)}</small></span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    `).join("");
   }
 
   function renderCourseRail() {
@@ -361,12 +381,12 @@
       <div class="course-timeline">
         <div class="timeline-heading"><h4>Semester plan</h4><button class="button button-secondary" data-add-course-item="${escapeHTML(course.id)}">+ Add assignment or reading</button></div>
         ${items.length ? items.map((item) => `
-          <article class="timeline-row">
+          <button class="timeline-row ${item.done ? "is-done" : ""}" data-open-item="${escapeHTML(item.id)}" aria-label="Open details for ${escapeHTML(item.title)}">
             <time>${escapeHTML(dateRangeLabel(item))}</time>
             <span class="timeline-mark"></span>
             <div><h5>${escapeHTML(item.title)}</h5><p>${escapeHTML(item.details)}</p></div>
-            ${item.flagged ? '<span class="flag-pill">Confirm</span>' : `<span class="type-badge">${escapeHTML(item.type)}</span>`}
-          </article>
+            ${item.done ? '<span class="type-badge">Completed</span>' : item.flagged ? '<span class="flag-pill">Confirm</span>' : `<span class="type-badge">${escapeHTML(item.type)}</span>`}
+          </button>
         `).join("") : $("#empty-state-template").innerHTML}
       </div>
     `;
@@ -395,19 +415,32 @@
     $("#selected-day-title").textContent = formatDate(state.selectedDate, { month: "long", day: "numeric" });
     $("#selected-day-items").innerHTML = items.length ? items.map((item) => {
       const course = courseById()[item.courseId];
-      return `<article class="day-item"><span class="type-badge">${escapeHTML(course?.name || "School-wide")} · ${escapeHTML(item.type)}</span><h4>${escapeHTML(item.title)}</h4><p>${escapeHTML(item.details)}</p>${item.flagged ? '<span class="flag-pill">Needs confirmation</span>' : ""}</article>`;
+      return `<button class="day-item ${item.done ? "is-done" : ""}" data-open-item="${escapeHTML(item.id)}" aria-label="Open details for ${escapeHTML(item.title)}"><span class="type-badge">${escapeHTML(course?.name || "School-wide")} · ${item.done ? "Completed" : escapeHTML(item.type)}</span><h4>${escapeHTML(item.title)}</h4><p>${escapeHTML(item.details)}</p>${!item.done && item.flagged ? '<span class="flag-pill">Needs confirmation</span>' : ""}</button>`;
     }).join("") : $("#empty-state-template").innerHTML;
   }
 
   function renderMaterials() {
+    const resources = [
+      { id: "onenote", label: "Kita's OneNote", url: state.quickLinks.oneNote, embed: state.quickLinks.oneNote, help: "Microsoft may ask Rekita to sign in before showing the notebook." },
+      { id: "checklist", label: "Assignment checklist", url: state.quickLinks.firstTwoWeeksChecklist, embed: "https://docs.google.com/document/d/1sDiEGBNyVgX1X1b9Nn8E2D76XiI0jrV-VU9ELwzWwXM/preview", help: "The first two weeks of readings and assignments for all five courses." },
+      { id: "caselog", label: "Case log", url: state.quickLinks.caseLog, embed: "https://docs.google.com/spreadsheets/d/1yk8DyqmlG5nEAKO49c5rTmc59gvTGLljl7fUpj6y-T8/preview?gid=1", help: "The shared Google Sheets case log." },
+    ];
+    const resourceHub = `<section class="embedded-resource-hub">
+      <div class="embedded-resource-heading"><div><p class="section-kicker">Working documents</p><h3>Study resources</h3><p>View notes, assignments, and case tracking without leaving the docket.</p></div></div>
+      <div class="resource-tabs" role="tablist" aria-label="Study resources">${resources.map((resource) => `<button class="${resource.id === state.activeResourceTab ? "is-active" : ""}" role="tab" data-resource-tab="${resource.id}" aria-selected="${resource.id === state.activeResourceTab}">${escapeHTML(resource.label)}</button>`).join("")}</div>
+      ${resources.map((resource) => `<section class="resource-panel" data-resource-panel="${resource.id}" ${resource.id === state.activeResourceTab ? "" : "hidden"}>
+        <div class="resource-panel-bar"><p>${escapeHTML(resource.help)}</p><a class="button button-primary" href="${escapeHTML(resource.url || "#")}" target="_blank" rel="noopener">Open full view ↗</a></div>
+        <iframe title="${escapeHTML(resource.label)} embedded view" ${resource.id === state.activeResourceTab ? `src="${escapeHTML(resource.embed || resource.url || "")}"` : ""} data-src="${escapeHTML(resource.embed || resource.url || "")}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </section>`).join("")}
+    </section>`;
     const syllabusLibrary = `<section class="syllabus-library">
       <div class="syllabus-library-heading"><div><p class="section-kicker">Always within reach</p><h3>Fall 2026 syllabus library</h3><p>Open the original course PDFs from any device.</p></div>
-      <div class="library-quick-actions"><a class="button button-primary" href="${escapeHTML(state.quickLinks.firstTwoWeeksChecklist || "#")}" target="_blank" rel="noopener">First two weeks checklist ↗</a><button class="button button-secondary" type="button" disabled title="Add Rekita's OneNote link when it is live">OneNote notes · coming soon</button></div></div>
+      <div class="library-quick-actions"><a class="button button-primary" href="${escapeHTML(state.quickLinks.oneNote || "#")}" target="_blank" rel="noopener">OneNote ↗</a><a class="button button-secondary" href="${escapeHTML(state.quickLinks.firstTwoWeeksChecklist || "#")}" target="_blank" rel="noopener">Checklist ↗</a><a class="button button-secondary" href="${escapeHTML(state.quickLinks.caseLog || "#")}" target="_blank" rel="noopener">Case log ↗</a></div></div>
       <div class="syllabus-link-grid">${state.courses.map((course) => course.syllabusUrl
         ? `<a class="syllabus-link-card" href="${escapeHTML(course.syllabusUrl)}" target="_blank" rel="noopener" style="--course-color:${escapeHTML(course.color)}"><span class="course-swatch"></span><strong>${escapeHTML(course.name)}</strong><small>Open syllabus PDF ↗</small></a>`
         : `<button class="syllabus-link-card is-pending" data-open-upload data-course-id="${escapeHTML(course.id)}" style="--course-color:${escapeHTML(course.color)}"><span class="course-swatch"></span><strong>${escapeHTML(course.name)}</strong><small>${escapeHTML(course.syllabusStatus || "Upload syllabus PDF")}</small></button>`).join("")}</div>
     </section>`;
-    $("#materials-grid").innerHTML = syllabusLibrary + state.courses.map((course) => {
+    $("#materials-grid").innerHTML = resourceHub + syllabusLibrary + state.courses.map((course) => {
       const materials = state.materials.filter((material) => material.courseId === course.id);
       return `<section class="course-material-group" style="--course-color:${escapeHTML(course.color)}">
         <header><span class="course-swatch"></span><div><p class="section-kicker">${escapeHTML(course.code)}</p><h4>${escapeHTML(course.name)}</h4></div><span>${materials.length} file${materials.length === 1 ? "" : "s"}</span></header>
@@ -427,6 +460,7 @@
 
   function renderAll() {
     renderHeader();
+    renderHomeResources();
     renderSchedule();
     renderConfirmations();
     renderReadingProgress();
@@ -454,6 +488,55 @@
     $("#item-form [name=type]").value = type;
     $("#form-status").textContent = "";
     $("#item-dialog").showModal();
+  }
+
+  function openItemDetail(itemId) {
+    const item = state.items.find((entry) => entry.id === itemId);
+    if (!item) return;
+    const course = courseById()[item.courseId];
+    state.activeItemId = itemId;
+    $("#item-detail-kicker").textContent = `${course?.name || "School-wide"} · ${item.type}`;
+    $("#item-detail-title").textContent = item.title;
+    $("#item-detail-meta").innerHTML = `<span><small>Date</small><strong>${escapeHTML(dateRangeLabel(item))}</strong></span>${course?.room ? `<span><small>Classroom</small><strong>${escapeHTML(course.room)}</strong></span>` : ""}${item.flagged ? '<span><small>Status</small><strong>Needs confirmation</strong></span>' : ""}`;
+    $("#item-detail-copy").textContent = item.details || "No additional instructions were listed.";
+    $("#item-complete-checkbox").checked = Boolean(item.done);
+    $("#item-detail-status").textContent = "";
+    $("#item-detail-dialog").showModal();
+  }
+
+  async function saveItemCompletion(form) {
+    const item = state.items.find((entry) => entry.id === state.activeItemId);
+    if (!item) return;
+    const done = new FormData(form).get("done") === "on";
+    const nextItems = state.items.map((entry) => entry.id === item.id ? { ...entry, done } : entry);
+    $("#item-detail-status").textContent = "Saving...";
+    try {
+      await writeDocument("items", nextItems);
+      state.items = nextItems;
+      state.connected = true;
+      $("#item-detail-dialog").close();
+      renderAll();
+    } catch (error) {
+      $("#item-detail-status").textContent = "This status could not be saved. Please try again.";
+      console.error(error);
+    }
+  }
+
+  function activateResourceTab(tabId) {
+    state.activeResourceTab = tabId;
+    $$('[data-resource-tab]').forEach((button) => {
+      const active = button.dataset.resourceTab === tabId;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    $$('[data-resource-panel]').forEach((panel) => {
+      const active = panel.dataset.resourcePanel === tabId;
+      panel.hidden = !active;
+      if (active) {
+        const frame = $("iframe", panel);
+        if (frame && !frame.getAttribute("src")) frame.src = frame.dataset.src;
+      }
+    });
   }
 
   async function saveNewItem(form) {
@@ -636,7 +719,12 @@
         state.selectedDate = calendarDay.dataset.calendarDate;
         renderCalendar();
       }
+      const itemButton = event.target.closest("[data-open-item]");
+      if (itemButton) openItemDetail(itemButton.dataset.openItem);
+      const resourceTab = event.target.closest("[data-resource-tab]");
+      if (resourceTab) activateResourceTab(resourceTab.dataset.resourceTab);
       if (event.target.closest("[data-close-dialog]")) $("#item-dialog").close();
+      if (event.target.closest("[data-close-item-detail]")) $("#item-detail-dialog").close();
       const uploadButton = event.target.closest("[data-open-upload]");
       if (uploadButton) {
         $("#upload-course").value = uploadButton.dataset.courseId || state.selectedCourseId || state.courses[0].id;
@@ -674,6 +762,10 @@
       event.preventDefault();
       saveNewItem(event.currentTarget);
     });
+    $("#item-detail-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveItemCompletion(event.currentTarget);
+    });
     $("#pages-read-form").addEventListener("submit", (event) => {
       event.preventDefault();
       savePagesRead(event.currentTarget);
@@ -697,4 +789,7 @@
   renderAll();
   bindEvents();
   hydrate();
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch((error) => console.warn("App install support is unavailable.", error)));
+  }
 })();

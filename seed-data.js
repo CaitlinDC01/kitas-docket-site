@@ -436,8 +436,9 @@
     ],
     materials,
     quickLinks: {
-      firstTwoWeeksChecklist: "https://docs.google.com/document/d/1sDiEGBNyVgX1X1b9Nn8E2D76XiI0jrV-VU9ELwzWwXM/edit",
-      oneNote: "",
+      firstTwoWeeksChecklist: "https://docs.google.com/document/d/1sDiEGBNyVgX1X1b9Nn8E2D76XiI0jrV-VU9ELwzWwXM/edit?tab=t.0#heading=h.dcaa5j6dlxo7",
+      oneNote: "https://tigernet365-my.sharepoint.com/personal/r_king7408_student_tsu_edu/Documents/Notebooks/L1%20Fall%20Semester?d=w37c51d97d46b498eb2bc5de024db0159&e=5%3agCiRqH&at=9",
+      caseLog: "https://docs.google.com/spreadsheets/d/1yk8DyqmlG5nEAKO49c5rTmc59gvTGLljl7fUpj6y-T8/edit?gid=1#gid=1",
     },
     standingFlags: [
       { id: "property-undated-theories", courseId: "property", title: "Theories of Property has no date", details: "Pages 1-24 appear without a clearly printed ‘Before This Date.’" },

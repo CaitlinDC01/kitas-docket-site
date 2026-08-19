@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#6f1533" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Kita's Docket" />
     <meta name="description" content="Kita's clear, course-first law school planner." />
     <meta property="og:title" content="Kita's Docket" />
     <meta property="og:description" content="A calm, course-first command center for 1L." />
@@ -11,6 +14,9 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://caitlindc01.github.io/kitas-docket-site/og.png" />
     <title>Kita's Docket</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet" />
@@ -22,7 +28,7 @@
     <div class="app-shell">
       <aside class="sidebar" aria-label="Primary navigation">
         <div class="brand-lockup">
-          <div class="brand-mark" aria-hidden="true">KD</div>
+          <div class="brand-mark" aria-hidden="true"><img src="app-icon-192.png" alt="" /></div>
           <div>
             <p class="eyebrow">Counselor Kita</p>
             <h1>Kita's Docket</h1>
@@ -74,6 +80,15 @@
                 <button class="button button-ghost-light" data-jump="courses">Courses</button>
               </div>
             </article>
+
+            <section class="home-study-hub" aria-labelledby="home-study-hub-title">
+              <div class="home-study-hub-copy">
+                <p class="section-kicker">Study hub</p>
+                <h3 id="home-study-hub-title">Notes, checklist, and case log</h3>
+                <p>Everything Rekita updates most often, one tap away.</p>
+              </div>
+              <div class="home-resource-links" id="home-resource-links"></div>
+            </section>
 
             <section class="content-section">
               <div class="section-heading">
@@ -224,6 +239,32 @@
         <div class="dialog-actions">
           <button class="button button-secondary" type="button" data-close-dialog>Cancel</button>
           <button class="button button-primary" type="submit">Save to docket</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="item-detail-dialog">
+      <form method="dialog" id="item-detail-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker" id="item-detail-kicker">Docket item</p>
+            <h3 id="item-detail-title">Item details</h3>
+          </div>
+          <button class="icon-button" type="button" data-close-item-detail aria-label="Close">×</button>
+        </div>
+        <div class="item-detail-meta" id="item-detail-meta"></div>
+        <div class="item-detail-copy">
+          <p class="section-kicker">Instructions &amp; details</p>
+          <p id="item-detail-copy"></p>
+        </div>
+        <label class="completion-check">
+          <input id="item-complete-checkbox" name="done" type="checkbox" />
+          <span><strong>Mark as completed</strong><small>This checkmark stays saved on the docket.</small></span>
+        </label>
+        <p class="form-status" id="item-detail-status" role="status"></p>
+        <div class="dialog-actions">
+          <button class="button button-secondary" type="button" data-close-item-detail>Cancel</button>
+          <button class="button button-primary" type="submit">Save status</button>
         </div>
       </form>
     </dialog>
