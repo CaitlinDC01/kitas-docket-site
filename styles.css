@@ -88,6 +88,28 @@ main { padding: 34px clamp(22px, 4vw, 58px) 80px; }
 .hero-card h3 { max-width: 660px; margin: 0 0 8px; font-family: "Playfair Display", serif; font-size: clamp(1.8rem, 3.2vw, 3rem); line-height: 1.04; }
 .hero-copy > p:not(.hero-date) { max-width: 720px; margin: 0; color: #eadde2; font-size: .9rem; line-height: 1.5; }
 .hero-actions { display: flex; flex: 0 0 auto; gap: 10px; position: relative; z-index: 1; }
+.assessment-countdown { display: grid; grid-template-columns: 112px minmax(0,1fr) auto; align-items: center; gap: 22px; margin-top: 12px; padding: 20px; overflow: hidden; border: 1px solid #e5d3a9; border-radius: 20px; background: linear-gradient(120deg, #fffaf0, #fff 58%, #f7efe0); box-shadow: var(--shadow); }
+.countdown-loading { grid-column: 1 / -1; color: var(--muted); }
+.countdown-clock { display: grid; place-items: center; align-content: center; width: 112px; height: 112px; border-radius: 50%; background: var(--burgundy); color: #fff; box-shadow: 0 12px 28px rgba(111,21,51,.2); }
+.countdown-clock strong { font-family: "Playfair Display", serif; font-size: 3rem; line-height: .9; }
+.countdown-clock span { margin-top: 6px; color: #ead3ab; font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.countdown-main { min-width: 0; }
+.countdown-main h3 { margin: 0; font-family: "Playfair Display", serif; font-size: clamp(1.2rem,2vw,1.65rem); }
+.countdown-date { margin: 4px 0 11px; color: var(--muted); font-size: .8rem; }
+.countdown-assessment-list { display: grid; gap: 5px; }
+.countdown-assessment-list button { width: 100%; display: grid; grid-template-columns: 8px minmax(0,1fr) auto; align-items: start; gap: 9px; padding: 8px 9px; border: 0; border-radius: 11px; background: rgba(255,255,255,.72); color: var(--ink); text-align: left; }
+.countdown-assessment-list button:hover, .countdown-assessment-list button:focus-visible { background: #fff; }
+.countdown-assessment-list .course-dot { width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--course-color); }
+.countdown-assessment-list strong, .countdown-assessment-list small { display: block; }
+.countdown-assessment-list strong { font-size: .82rem; }
+.countdown-assessment-list small { margin-top: 2px; overflow: hidden; color: var(--muted); font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.countdown-following { margin: 9px 0 0; color: var(--muted); font-size: .7rem; }
+.countdown-actions { display: grid; justify-items: stretch; gap: 9px; min-width: 150px; }
+.countdown-actions .text-button { font-size: .72rem; }
+.countdown-empty { grid-column: 1 / -1; display: grid; grid-template-columns: 42px minmax(0,1fr) auto; align-items: center; gap: 14px; }
+.countdown-empty > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: #edf2e9; color: #55704a; font-weight: 900; }
+.countdown-empty h3 { margin: 0; font-family: "Playfair Display", serif; font-size: 1.15rem; }
+.countdown-empty p:last-child { margin: 4px 0 0; color: var(--muted); font-size: .75rem; }
 .home-study-hub { display: grid; grid-template-columns: minmax(210px,.55fr) minmax(0,1.45fr); align-items: center; gap: 24px; margin-top: 12px; padding: 18px 20px; border: 1px solid #e7ded7; border-radius: 18px; background: #fff; box-shadow: var(--shadow); }
 .home-study-hub h3 { margin: 0; font-family: "Playfair Display", serif; font-size: 1.15rem; }
 .home-study-hub-copy > p:last-child { margin: 4px 0 0; color: var(--muted); font-size: .76rem; }
@@ -366,6 +388,13 @@ dialog label { display: grid; gap: 6px; color: var(--muted); font-size: .76rem; 
   .reading-progress { grid-template-columns: 1fr; gap: 15px; padding: 18px 16px; }
   .home-study-hub { grid-template-columns: 1fr; padding: 18px 16px; }
   .home-resource-links { grid-template-columns: 1fr; }
+  .assessment-countdown { grid-template-columns: 76px minmax(0,1fr); align-items: start; gap: 14px; padding: 17px 15px; }
+  .countdown-clock { width: 76px; height: 76px; }
+  .countdown-clock strong { font-size: 2.2rem; }
+  .countdown-actions { grid-column: 1 / -1; grid-template-columns: 1fr auto; align-items: center; }
+  .countdown-assessment-list small { white-space: normal; }
+  .countdown-empty { grid-template-columns: 42px minmax(0,1fr); }
+  .countdown-empty .button { grid-column: 1 / -1; }
   .pages-read-form { grid-column: auto; grid-template-columns: 1fr; justify-content: stretch; }
   .pages-read-form > div { width: 100%; }
   .pages-read-form input { width: 100%; }

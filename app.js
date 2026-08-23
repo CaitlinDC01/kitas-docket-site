@@ -215,6 +215,47 @@
     `).join("");
   }
 
+  function isAssessment(item) {
+    const type = String(item.type || "").toLowerCase();
+    const copy = `${item.title || ""} ${item.details || ""}`;
+    if (/\bTBD\b|exact date/i.test(copy)) return false;
+    if (type === "exam" || type === "quiz") return true;
+    if (type === "review") return false;
+    return /\b(quiz|exam|midterm|final)\b/i.test(String(item.title || ""));
+  }
+
+  function renderAssessmentCountdown() {
+    const todayKey = localDateKey(new Date());
+    const assessments = state.items
+      .filter((item) => !item.done && item.date >= todayKey && isAssessment(item))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
+    const container = $("#assessment-countdown");
+    if (!assessments.length) {
+      container.innerHTML = `<div class="countdown-empty"><span aria-hidden="true">✓</span><div><p class="section-kicker">Assessment countdown</p><h3>No dated quizzes or exams are currently ahead.</h3><p>Add one to the docket and it will appear here automatically.</p></div><button class="button button-primary" data-add-course-item="${escapeHTML(state.selectedCourseId)}" data-item-type="exam">+ Add exam</button></div>`;
+      return;
+    }
+    const nextDate = assessments[0].date;
+    const nextItems = assessments.filter((item) => item.date === nextDate);
+    const following = assessments.find((item) => item.date > nextDate);
+    const days = Math.max(0, Math.round((parseDate(nextDate) - parseDate(todayKey)) / 86400000));
+    const dayLabel = days === 0 ? "Today" : days === 1 ? "Tomorrow" : `${days} days`;
+    const heading = nextItems.length === 1 ? nextItems[0].title : `${nextItems.length} assessments on the same day`;
+    container.innerHTML = `
+      <div class="countdown-clock" aria-label="${escapeHTML(dayLabel)} until the next assessment"><strong>${days}</strong><span>${days === 1 ? "day" : "days"}</span></div>
+      <div class="countdown-main">
+        <p class="section-kicker">Next quiz or exam · ${escapeHTML(dayLabel)}</p>
+        <h3>${escapeHTML(heading)}</h3>
+        <p class="countdown-date">${formatDate(nextDate, { weekday: "long", month: "long", day: "numeric" })}</p>
+        <div class="countdown-assessment-list">${nextItems.map((item) => {
+          const course = courseById()[item.courseId];
+          return `<button data-open-item="${escapeHTML(item.id)}" style="--course-color:${escapeHTML(course?.color || "#c49a53")}"><span class="course-dot"></span><span><strong>${escapeHTML(item.title)}</strong><small>${escapeHTML(course?.name || "School-wide")}${item.details ? ` · ${escapeHTML(item.details)}` : ""}</small></span><span aria-hidden="true">→</span></button>`;
+        }).join("")}</div>
+        ${following ? `<p class="countdown-following">After that: <strong>${escapeHTML(following.title)}</strong> · ${formatDate(following.date, { month: "short", day: "numeric" })}</p>` : ""}
+      </div>
+      <div class="countdown-actions"><button class="button button-primary" data-countdown-calendar="${escapeHTML(nextDate)}">View in calendar</button><button class="text-button" data-add-course-item="${escapeHTML(state.selectedCourseId)}" data-item-type="quiz">+ Add quiz or exam</button></div>
+    `;
+  }
+
   function renderConfirmations() {
     const dateFlags = state.items.filter((item) => item.flagged).map((item) => ({
       id: item.id,
@@ -460,6 +501,7 @@
 
   function renderAll() {
     renderHeader();
+    renderAssessmentCountdown();
     renderHomeResources();
     renderSchedule();
     renderConfirmations();
@@ -701,7 +743,7 @@
       const courseButton = event.target.closest("[data-open-course]");
       if (courseButton) openCourse(courseButton.dataset.openCourse);
       const addCourseItemButton = event.target.closest("[data-add-course-item]");
-      if (addCourseItemButton) openItemDialog(addCourseItemButton.dataset.addCourseItem, "assignment");
+      if (addCourseItemButton) openItemDialog(addCourseItemButton.dataset.addCourseItem, addCourseItemButton.dataset.itemType || "assignment");
       const rangeButton = event.target.closest("[data-range]");
       if (rangeButton) {
         state.rangeDays = Number(rangeButton.dataset.range);
@@ -718,6 +760,13 @@
       if (calendarDay) {
         state.selectedDate = calendarDay.dataset.calendarDate;
         renderCalendar();
+      }
+      const countdownCalendarButton = event.target.closest("[data-countdown-calendar]");
+      if (countdownCalendarButton) {
+        state.selectedDate = countdownCalendarButton.dataset.countdownCalendar;
+        state.calendarMonth = startOfMonth(parseDate(state.selectedDate));
+        renderCalendar();
+        setView("calendar");
       }
       const itemButton = event.target.closest("[data-open-item]");
       if (itemButton) openItemDetail(itemButton.dataset.openItem);

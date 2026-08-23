@@ -82,6 +82,10 @@
               </div>
             </article>
 
+            <section class="assessment-countdown" id="assessment-countdown" aria-live="polite">
+              <div class="countdown-loading">Finding the next quiz or exam…</div>
+            </section>
+
             <section class="home-study-hub" aria-labelledby="home-study-hub-title">
               <div class="home-study-hub-copy">
                 <p class="section-kicker">Study hub</p>
@@ -228,7 +232,7 @@
           <button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button>
         </div>
         <label>Course<select name="courseId" id="item-course"></select></label>
-        <label>Type<select name="type"><option value="assignment">Assignment</option><option value="reading">Reading</option><option value="exam">Exam</option><option value="review">Review</option><option value="administrative">Administrative</option></select></label>
+        <label>Type<select name="type"><option value="assignment">Assignment</option><option value="reading">Reading</option><option value="quiz">Quiz</option><option value="exam">Exam</option><option value="review">Review</option><option value="administrative">Administrative</option></select></label>
         <label>Title<input name="title" required placeholder="What needs to happen?" /></label>
         <div class="form-row">
           <label>Date<input name="date" type="date" required /></label>
